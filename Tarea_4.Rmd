@@ -5,30 +5,27 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
-# Introducción
-
-Para el desarrollo de la tarea se ocupan múltiples librerías, por lo que procedemos a descargarlas.
-
 # Pregunta 1
 
 ## Funciones
 
 Inicialmente, vamos a programar el método símple, para lo cual se presenta la siguiente función.
 
-```{r fun_simple}
+```{r fun_clasica}
 #' Función que calcula la p.d.f de una compuesta Poisson a través del método
 #' clásico
 #'
 #' @param lambda (double) El parámetro lambda de la variable aleatoria S
-#' @param x (int) Último valor en el que será evaluada la p.d.f
+#' @param x (int) Último valor en el que será evaluada la p.d.f, se asume que es,
+#' como mínimo, 1
 #' @param prob (Vector) Vector con la probabilidad de ocurrencia de cada uno de
 #' los reclamos individuales. Iniciando en la probabilidad de 0 y termiando en
 #' la probabilidad del parámetro "x"
 #'
-#' @return df.resultante (DataFrame) DataFrame con los valores de "x" y con la
-#' p.d.f evaluada en cada uno de los "x"
+#' @return matriz_comp (matrix) Matriz con los valores de "x", las distintas
+#' probabilidades, convoluciones y la densidad de S (en la última columna)
 #'
-metodo_clasico <- function(lambda, x, prob){
+metodo_clasico <- function(lambda, x, prob) {
   # Construimos una matriz que contendrá los "x", los vectores de probabilidades
   # incluyendo convoluciones y el resultado de la p.d.f
   matriz_comp <- matrix(0, nrow = x + 1, ncol = x + 3)
@@ -36,12 +33,75 @@ metodo_clasico <- function(lambda, x, prob){
   # Se calculan los valores de la distribución Poisson
   vec_pois <- exp(-lambda) * ((lambda) ^ (0:x)) / (factorial(0:x))
   
-  # Se agregan los "x" a la matriz
+  # Se agregan los "x" a la matriz, en la primer columna
   matriz_comp[, 1] <- 0:x
+  
+  # Columna con punto de masa en 1, en la segunda columna
+  matriz_comp[1, 2] <- 1
+  
+  # Vector de probabilidades de ocurrencia de los reclamos, en la tercer columna
+  matriz_comp[, 3] <- prob
+  
+  # Se añade la primer convolución, prob consigo misma, a la cuarta columna
+  matriz_comp[, 4] <-
+    tail(convolve(
+      x = prob,
+      y = prob,
+      conj = FALSE,
+      type = "open"
+    ),
+    n = (x + 1))
+  
+  # Arreglamos los valores que son 0
+  matriz_comp <- matriz_comp * ifelse(matriz_comp > 1e-16, 1, 0)
+  
+  # Luego, se procede a añadir el resto de convoluciones, en caso de ser necesario
+  if (x > 1) {
+    for (i in 5:(ncol(matriz_comp) - 1)) {
+      # Se añade la convolución a la columna
+      matriz_comp[, i] <-
+        tail(convolve(
+          x = matriz_comp[, 3],
+          y = matriz_comp[, (i - 1)],
+          conj = FALSE,
+          type = "open"
+        ),
+        n = (x + 1))
+      
+      # Se añade una corrección para los 0
+      matriz_comp <- matriz_comp * ifelse(matriz_comp > 1e-16, 1, 0)
+    }
+  }
+  
+  # Ahora, creamos una matriz con los valores de la Poisson
+  matriz_pois <-
+    matrix(
+      vec_pois,
+      nrow = nrow(matriz_comp),
+      ncol = (ncol(matriz_comp) - 2),
+      byrow = TRUE
+    )
+  
+  # Ahora, obtenemos la p.d.f de la variable aleatoria S
+  matriz_comp[, ncol(matriz_comp)] <-
+    rowSums(matriz_pois * matriz_comp[, (2:(ncol(matriz_comp) - 1))])
+  
+  # Se devuelve la matriz resultante
+  return(matriz_comp)
 }
 ```
 
+Para comprobar el funcionamiento de la función anterior, se procede a hacer una prueba con los valores encontrados en la diapositiva 42. El resultado cosiste en la tabla de la filmina 43:
 
+```{r prueba_clasica}
+metodo_clasico(
+  lambda = 0.8,
+  x = 6,
+  prob = c(0, 0.25, 0.375, 0.375, 0, 0, 0)
+)
+```
+
+Posteriormente, se programará el método simplificado, ubicado en la diapositiva 44 de la presentación.
 
 ## Ejercicio
 
