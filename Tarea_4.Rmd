@@ -5,9 +5,42 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
+# Introducción
+
+Para el desarrollo de la tarea se ocupan múltiples librerías, por lo que procedemos a descargarlas.
+
 # Pregunta 1
 
 ## Funciones
+
+Inicialmente, vamos a programar el método símple, para lo cual se presenta la siguiente función.
+
+```{r fun_simple}
+#' Función que calcula la p.d.f de una compuesta Poisson a través del método
+#' clásico
+#'
+#' @param lambda (double) El parámetro lambda de la variable aleatoria S
+#' @param x (int) Último valor en el que será evaluada la p.d.f
+#' @param prob (Vector) Vector con la probabilidad de ocurrencia de cada uno de
+#' los reclamos individuales. Iniciando en la probabilidad de 0 y termiando en
+#' la probabilidad del parámetro "x"
+#'
+#' @return df.resultante (DataFrame) DataFrame con los valores de "x" y con la
+#' p.d.f evaluada en cada uno de los "x"
+#'
+metodo_clasico <- function(lambda, x, prob){
+  # Construimos una matriz que contendrá los "x", los vectores de probabilidades
+  # incluyendo convoluciones y el resultado de la p.d.f
+  matriz_comp <- matrix(0, nrow = x + 1, ncol = x + 3)
+  
+  # Se calculan los valores de la distribución Poisson
+  vec_pois <- exp(-lambda) * ((lambda) ^ (0:x)) / (factorial(0:x))
+  
+  # Se agregan los "x" a la matriz
+  matriz_comp[, 1] <- 0:x
+}
+```
+
 
 
 ## Ejercicio
