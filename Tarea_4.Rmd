@@ -5,6 +5,15 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
+# Librerías
+
+Las diversas librerías ocupadas para la tares se encuentran a continuación.
+
+```{r librerias}
+pacman::p_load(knitr)
+```
+
+
 # Pregunta 1
 
 ## Funciones
@@ -168,11 +177,43 @@ Para ver la función a prueba, se replica el ejemplo de las diapositivas. En con
 metodo_simple(0.8, 6, c(0.25, 0.375, 0.375))
 ```
 
+Note que la función de distribución (última columna) de ambos métodos coincide.
 
 ## Ejercicio
 
+Si **S** tiene una distribución compuesta de Poisson con $\lambda = 2$ y $f_X(x) = 0,1 \cdot x$ para $x = 1, 2, 3, 4$,
+calcule las probabilidades de que los reclamos agregados sean $0,1,2,3,4$.
 
+En este caso, al tener una función de distribución, iniciamos obteniendo las probabilidades de cada reclamo individual, resultando en:
 
+| $x$ | $f_X(x)$ |
+|:-----:|:----------:|
+| 0 | 0.0 |
+| 1 | 0.1 |
+| 2 | 0.2 |
+| 3 | 0.3 |
+| 4 | 0.4 |
+
+Con estos datos, ya podemos usar alguna de las funciones anteriores para obtener la función de densidad.
+
+```{r sol_ejercicio_4}
+# Tabla completa
+sol <- metodo_simple(2, 4, c(0.1, 0.2, 0.3, 0.4))
+
+# Resultado pedido en el ejercicio
+resultado_4 <- data.frame("Cantidad de reclamos agregados" = 0:4,
+                          "Probabilidad" = sol[, 7])
+```
+
+El resultado pedido en el ejercicio es:
+
+```{r resultado_4}
+kable(
+  resultado_4,
+  col.names = c("Cantidad de reclamos agregados", "Probabilidad"),
+  align = "c"
+)
+```
 
 
 # Pregunta 2
