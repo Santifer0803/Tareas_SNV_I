@@ -10,7 +10,7 @@ output: html_document
 Las diversas librerías ocupadas para la tares se encuentran a continuación.
 
 ```{r librerias}
-pacman::p_load(knitr)
+pacman::p_load(knitr, tidyverse, tidyr, actuar, ggplot2)
 ```
 
 
@@ -218,8 +218,102 @@ kable(
 
 # Pregunta 2
 
+Para la pregunta 2 se pide calcular la $f_S(x)$, donde $x = 0, 1, \cdots, 5$ para las distribuciones de:
+- Distribución de Poisson de parámetro $\lambda = 4.5$
+- Distribución Binomial de parámetros $n = 9$ y $p = 0.5$
+- Distrbicuión Binomial Negativa de parámetros $r = 4.5$ y $p = 0.5$
+Distribución del monto del siniestro, $p(1) = 0.7$ y $p(2) = 0.3$
 
-## Funciones
+El código de implementación de la fórmula recursiva fue dada por el profesor, por lo que nada más se tuvo que adaptar para las otras distribuciones, a continuación, se presenta el código de la poisson y sus resultados.
+
+```{r}
+recursiva<-function(lambda,k,f_j){
+  
+  g0<- exp(-lambda*(1-f_j[1]))
+  if(k==0){resultado=g0}else{
+    aux=0
+    for(j in 1:k){
+      aux= aux+j*f_j[j+1]*recursiva(lambda,(k-j),f_j)
+    }
+    resultado= (lambda/k)*aux
+  }
+  return(resultado)
+}
+```
+
+Resultados obtenidos. 
+
+```{r}
+lambda <- 4.5 # Media.
+f_j <- c(0, 0.7, 0.3, 0, 0, 0) # Probabilidad de incidencia.
+
+f_s <- sapply(0:5, function(k) recursiva(lambda, k, f_j))
+
+print(f_s)
+```
+Se procede de manera análoga con la Binomial:
+
+```{r}
+recursiva_binomial <- function(m, p, k, f_j) {
+  g0 <- (1 - p + p * f_j[1])^m
+  if (k == 0) {
+    resultado <- g0
+  } else {
+    aux <- 0
+    for (j in 1:k) {
+      if ((k - j) <= m && (k - j) >= 0) {
+        aux <- aux + j * f_j[j + 1] * (m - k + j) * recursiva_binomial(m, p, k - j, f_j)
+      }
+    }
+    resultado <- (p / (k * (1 - p))) * aux
+  }
+  return(resultado)
+}
+```
+
+El resultado obtenido es: 
+
+```{r}
+m <- 9
+p <- 0.5
+f_j <- c(0, 0.7, 0.3, 0, 0, 0)
+
+f_s_binom <- sapply(0:5, function(k) recursiva_binomial(m, p, k, f_j))
+
+print(f_s_binom)
+```
+Por último se repite el proceso para la binomial negativa, obteniendo como resultado: 
+
+```{r}
+recursiva_negbinom <- function(r, beta, k, f_j) {
+  
+  g0 <- (beta / (1 - (1 - beta) * f_j[1]))^r  
+  
+  if (k == 0) {
+    resultado <- g0
+  } else {
+    aux <- 0
+    for (j in 1:k) {
+      aux <- aux + j * f_j[j + 1] * recursiva_negbinom(r, beta, k - j, f_j)
+    }
+    resultado <- ((1 - beta) * r / k) * aux
+  }
+  return(resultado)
+}
+```
 
 
-## Ejercicio
+```{r}
+f_X <- c(0, 0.7, 0.3, 0, 0, 0)
+r <- 4.5
+beta <- 0.5
+
+f_s <- sapply(0:5, function(k) recursiva_negbinom(r, beta, k, f_X))
+print(f_s)
+```
+
+
+
+
+
+
